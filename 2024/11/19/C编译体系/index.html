@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="C编译体系1. Reference 为什么 C++ 标准不明确二进制接口 (ABI) 标准？   2. C&#x2F;C++的包管理首先需要明确，C&#x2F;C++不是一个跨平台的语言，C&#x2F;C++并没有一个统一的包管理器。 由于C&#x2F;C++由于编译选项多种多样，目标平台多种多样，甚至编译器以及runtime之间互不兼容，导致并不能做到一次编译处处运行。 比如在Windows平台">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hexo">
+<meta property="og:url" content="http://example.com/2024/11/19/C%E7%BC%96%E8%AF%91%E4%BD%93%E7%B3%BB/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="C编译体系1. Reference 为什么 C++ 标准不明确二进制接口 (ABI) 标准？   2. C&#x2F;C++的包管理首先需要明确，C&#x2F;C++不是一个跨平台的语言，C&#x2F;C++并没有一个统一的包管理器。 由于C&#x2F;C++由于编译选项多种多样，目标平台多种多样，甚至编译器以及runtime之间互不兼容，导致并不能做到一次编译处处运行。 比如在Windows平台">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2024/11/19/C%E7%BC%96%E8%AF%91%E4%BD%93%E7%B3%BB/assets/2560px-Linux_kernel_interfaces.svg.png">
+<meta property="og:image" content="http://example.com/assets/2560px-Unix_history-simple.svg.png">
+<meta property="og:image" content="http://example.com/2024/11/19/C%E7%BC%96%E8%AF%91%E4%BD%93%E7%B3%BB/assets/image-20241123013508116.png">
+<meta property="og:image" content="http://example.com/2024/11/19/C%E7%BC%96%E8%AF%91%E4%BD%93%E7%B3%BB/assets/2560px-Linux_kernel_System_Call_Interface_and_glibc.svg.png">
+<meta property="og:image" content="http://example.com/2024/11/19/C%E7%BC%96%E8%AF%91%E4%BD%93%E7%B3%BB/assets/image-20241123160108053.png">
+<meta property="article:published_time" content="2024-11-19T07:09:52.618Z">
+<meta property="article:modified_time" content="2024-11-24T13:29:05.266Z">
+<meta property="article:author" content="KangjieZhang">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2024/11/19/C%E7%BC%96%E8%AF%91%E4%BD%93%E7%B3%BB/assets/2560px-Linux_kernel_interfaces.svg.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Muse',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://example.com/2024/11/19/C编译体系/"/>
+
+
+
+
+
+  <title> | Hexo</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Hexo</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/%20" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/%20" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/11/19/C%E7%BC%96%E8%AF%91%E4%BD%93%E7%B3%BB/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline"></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2024-11-19T15:09:52+08:00">
+                2024-11-19
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="C编译体系"><a href="#C编译体系" class="headerlink" title="C编译体系"></a>C编译体系</h1><h1 id="1-Reference"><a href="#1-Reference" class="headerlink" title="1. Reference"></a>1. Reference</h1><ol>
+<li><a target="_blank" rel="noopener" href="https://www.zhihu.com/question/39148567">为什么 C++ 标准不明确二进制接口 (ABI) 标准？</a></li>
+<li></li>
+</ol>
+<h1 id="2-C-C-的包管理"><a href="#2-C-C-的包管理" class="headerlink" title="2. C&#x2F;C++的包管理"></a>2. C&#x2F;C++的包管理</h1><p>首先需要明确，<strong>C&#x2F;C++不是一个跨平台的语言，C&#x2F;C++并没有一个统一的包管理器</strong>。</p>
+<p>由于C&#x2F;C++由于编译选项多种多样，目标平台多种多样，甚至编译器以及runtime之间互不兼容，导致并不能做到<strong>一次编译处处运行</strong>。</p>
+<p>比如在Windows平台下，编译选项有<strong>MT&#x2F;MTd&#x2F;MD&#x2F;MDd</strong>，需要为这四种编译类型提供4套binary。而Linux平台下的binary也有区别，有RTTI和没RTTI的代码是无法链接在一起的。这就导致如果要发行一个包，包的发布者需要提供数不清的binary。</p>
+<p>这只是考虑到编译选项一个条件，当考虑目标平台、编译器以及runtime之后，相当于做了一个笛卡尔乘积，导致组合爆炸。因此对于C&#x2F;C++这种和编译器以及平台强关联的语言，很难出现一个<strong>语言级别</strong>的包管理器。更多的是对于不同的平台有各自对应的<strong>系统级别</strong>的二进制包管理器。</p>
+<ul>
+<li>Debian系的apt-get以及apt</li>
+<li>ReadHat系的rpm以及dnf</li>
+<li>Window的vcpkg、conan以及nuget等</li>
+</ul>
+<p>但是对于JavaScript、Java以及Python等跨平台解释型语言来说，上面都不是问题。因此这些跨平台语言都有各自非常好用且被广泛使用的<strong>语言级别</strong>的包管理工具，比如JavaScript的NPM，Java的Maven，Python的pip等。</p>
+<p>因此对于C&#x2F;C++的包管理，目前有以下几种方案：</p>
+<ul>
+<li>Linux发行版自带的包管理工具</li>
+<li>使用CMake、pkg-config等手动引用</li>
+<li>代码库内带二进制依赖</li>
+<li>分布式源码管理+集中式依赖管理</li>
+</ul>
+<h2 id="2-1-Linux自带的二进制包管理工具"><a href="#2-1-Linux自带的二进制包管理工具" class="headerlink" title="2.1 Linux自带的二进制包管理工具"></a>2.1 Linux自带的二进制包管理工具</h2><p>我们拿Debian系的apt-get&#x2F;apt为例。在了解Debian下的包管理之前，需要先了解一下debian下.deb格式。</p>
+<h2 id="2-2-利用CMake等手动引用"><a href="#2-2-利用CMake等手动引用" class="headerlink" title="2.2 利用CMake等手动引用"></a>2.2 利用CMake等手动引用</h2><p>对于一个C&#x2F;C++包，其核心是头文件，静态库以及动态库三部分。因此只要配置好这三者的路径就可以解决问题。</p>
+<p>首先我们从系统库来看，一个C&#x2F;C++程序是如何链接到一个系统库的。</p>
+<p>我们以下面一个最基础的程序为例</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span> &#123;</span><br><span class="line">  <span class="built_in">printf</span>(<span class="string">&quot;Hello, World!\n&quot;</span>);</span><br><span class="line">  <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>假如我们需要在Linux环境下编译，直接通过</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gcc main.cpp</span><br></pre></td></tr></table></figure>
+
+<p>就可以实现，当前目录下就会有一个可执行的a.out文件。</p>
+<p>但是这里的gcc命令背后则比我们想象的更加复杂。我们上面调用的gcc实际上是一个compiler driver。这个compiler driver会自动帮我们完成编译的各个阶段，从预处理到最后的链接。</p>
+<p>我们可以通过gcc -### main.c来查看gcc具体调用了那些组件。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">Using built-in specs.</span><br><span class="line">COLLECT_GCC=gcc</span><br><span class="line">COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-linux-gnu/12/lto-wrapper</span><br><span class="line">OFFLOAD_TARGET_NAMES=nvptx-none:amdgcn-amdhsa</span><br><span class="line">OFFLOAD_TARGET_DEFAULT=1</span><br><span class="line">Target: x86_64-linux-gnu</span><br><span class="line">Configured with: ../src/configure -v --with-pkgversion=&#x27;Debian 12.2.0-14&#x27; --with-bugurl=file:///usr/share/doc/gcc-12/README.Bugs --enable-languages=c,ada,c++,go,d,fortran,objc,obj-c++,m2 --prefix=/usr --with-gcc-major-version-only --program-suffix=-12 --program-prefix=x86_64-linux-gnu- --enable-shared --enable-linker-build-id --libexecdir=/usr/lib --without-included-gettext --enable-threads=posix --libdir=/usr/lib --enable-nls --enable-clocale=gnu --enable-libstdcxx-debug --enable-libstdcxx-time=yes --with-default-libstdcxx-abi=new --enable-gnu-unique-object --disable-vtable-verify --enable-plugin --enable-default-pie --with-system-zlib --enable-libphobos-checking=release --with-target-system-zlib=auto --enable-objc-gc=auto --enable-multiarch --disable-werror --enable-cet --with-arch-32=i686 --with-abi=m64 --with-multilib-list=m32,m64,mx32 --enable-multilib --with-tune=generic --enable-offload-targets=nvptx-none=/build/gcc-12-bTRWOB/gcc-12-12.2.0/debian/tmp-nvptx/usr,amdgcn-amdhsa=/build/gcc-12-bTRWOB/gcc-12-12.2.0/debian/tmp-gcn/usr --enable-offload-defaulted --without-cuda-driver --enable-checking=release --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=x86_64-linux-gnu</span><br><span class="line">Thread model: posix</span><br><span class="line">Supported LTO compression algorithms: zlib zstd</span><br><span class="line">gcc version 12.2.0 (Debian 12.2.0-14) </span><br><span class="line">COLLECT_GCC_OPTIONS=&#x27;-mtune=generic&#x27; &#x27;-march=x86-64&#x27; &#x27;-dumpdir&#x27; &#x27;a-&#x27;</span><br><span class="line"> /usr/lib/gcc/x86_64-linux-gnu/12/cc1 -quiet -imultiarch x86_64-linux-gnu main.c -quiet -dumpdir a- -dumpbase main.c -dumpbase-ext .c &quot;-mtune=generic&quot; &quot;-march=x86-64&quot; -fasynchronous-unwind-tables -o /tmp/ccMmLKkS.s</span><br><span class="line">COLLECT_GCC_OPTIONS=&#x27;-mtune=generic&#x27; &#x27;-march=x86-64&#x27; &#x27;-dumpdir&#x27; &#x27;a-&#x27;</span><br><span class="line"> as --64 -o /tmp/ccWpQP5t.o /tmp/ccMmLKkS.s</span><br><span class="line">COMPILER_PATH=/usr/lib/gcc/x86_64-linux-gnu/12/:/usr/lib/gcc/x86_64-linux-gnu/12/:/usr/lib/gcc/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/12/:/usr/lib/gcc/x86_64-linux-gnu/</span><br><span class="line">LIBRARY_PATH=/usr/lib/gcc/x86_64-linux-gnu/12/:/usr/lib/gcc/x86_64-linux-gnu/12/../../../x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/12/../../../../lib/:/lib/x86_64-linux-gnu/:/lib/../lib/:/usr/lib/x86_64-linux-gnu/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-linux-gnu/12/../../../:/lib/:/usr/lib/</span><br><span class="line">COLLECT_GCC_OPTIONS=&#x27;-mtune=generic&#x27; &#x27;-march=x86-64&#x27; &#x27;-dumpdir&#x27; &#x27;a.&#x27;</span><br><span class="line"> /usr/lib/gcc/x86_64-linux-gnu/12/collect2 -plugin /usr/lib/gcc/x86_64-linux-gnu/12/liblto_plugin.so &quot;-plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/12/lto-wrapper&quot; &quot;-plugin-opt=-fresolution=/tmp/cc63PQoN.res&quot; &quot;-plugin-opt=-pass-through=-lgcc&quot; &quot;-plugin-opt=-pass-through=-lgcc_s&quot; &quot;-plugin-opt=-pass-through=-lc&quot; &quot;-plugin-opt=-pass-through=-lgcc&quot; &quot;-plugin-opt=-pass-through=-lgcc_s&quot; --build-id --eh-frame-hdr -m elf_x86_64 &quot;--hash-style=gnu&quot; --as-needed -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie /usr/lib/gcc/x86_64-linux-gnu/12/../../../x86_64-linux-gnu/Scrt1.o /usr/lib/gcc/x86_64-linux-gnu/12/../../../x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/12/crtbeginS.o -L/usr/lib/gcc/x86_64-linux-gnu/12 -L/usr/lib/gcc/x86_64-linux-gnu/12/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/12/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/12/../../.. /tmp/ccWpQP5t.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/x86_64-linux-gnu/12/crtendS.o /usr/lib/gcc/x86_64-linux-gnu/12/../../../x86_64-linux-gnu/crtn.o</span><br><span class="line">COLLECT_GCC_OPTIONS=&#x27;-mtune=generic&#x27; &#x27;-march=x86-64&#x27; &#x27;-dumpdir&#x27; &#x27;a.&#x27;</span><br></pre></td></tr></table></figure>
+
+<p>整体的一个流程是</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">flowchart LR</span><br><span class="line">	id1[cc1]</span><br><span class="line">	id2[as]</span><br><span class="line">	id3[collect2]</span><br><span class="line">	</span><br><span class="line">	id1 --&gt; id2 --&gt; id3</span><br><span class="line">	</span><br></pre></td></tr></table></figure>
+
+<p>我们下面来逐一解析这一大段输出。</p>
+<p>COLLECT_GCC_OPTIONS</p>
+<h2 id="2-3-代码库内带二进制依赖"><a href="#2-3-代码库内带二进制依赖" class="headerlink" title="2.3 代码库内带二进制依赖"></a>2.3 代码库内带二进制依赖</h2><p>前两点是个人开发者常用的方法，而后面两点可能是一些公司采用的方案。</p>
+<h2 id="2-4-分布式源码管理-集中式依赖管理"><a href="#2-4-分布式源码管理-集中式依赖管理" class="headerlink" title="2.4 分布式源码管理+集中式依赖管理"></a>2.4 分布式源码管理+集中式依赖管理</h2><p>并且C&#x2F;C++的ABI没有一个统一的标准</p>
+<p>目前来看，C&#x2F;C++包管理有以下几种</p>
+<h1 id="3-C-C-ABI"><a href="#3-C-C-ABI" class="headerlink" title="3. C&#x2F;C++ ABI"></a>3. C&#x2F;C++ ABI</h1><blockquote>
+<p>一直期待能有统一的C++二进制兼容标准（C++ ABI），但是目前情况还是不容乐观，基本形成以微软的VISUAL C++和GNU阵营的GCC（采用Intel Itanium C++ ABI标准）为首的两大派系，各抒己见互不兼容。<br>                                                                                       —–程序员的自我修养</p>
+</blockquote>
+<p>目前来看C++ ABI有两套标准：</p>
+<ol>
+<li><a target="_blank" rel="noopener" href="https://itanium-cxx-abi.github.io/cxx-abi/abi.html">Itanium C++ ABI</a>&#96;&#96;</li>
+<li>MSVC C++ ABI</li>
+</ol>
+<p>ABI不统一导致的问题就是，不同编译器编译出的目标文件不能够相互链接</p>
+<h1 id="Windows下的C-C-编译体系"><a href="#Windows下的C-C-编译体系" class="headerlink" title=". Windows下的C&#x2F;C++编译体系"></a>. Windows下的C&#x2F;C++编译体系</h1><p>Windows下的C&#x2F;C++的编译体系与Linux有很大不同。</p>
+<h2 id="1-API-ABI"><a href="#1-API-ABI" class="headerlink" title=".1 API&#x2F;ABI"></a>.1 API&#x2F;ABI</h2><p>在我们讨论Windows下的编译体系之前，非常有必要了解一下POSIX&#x2F;API&#x2F;ABI这几个概念。</p>
+<p>当我们在编译体系中谈论API与ABI时，往往是与可移植性有密切联系的。</p>
+<img src="./assets/2560px-Linux_kernel_interfaces.svg.png" alt="undefined" style="zoom: 25%;" />
+
+<p>可移植性可以分为两个层面的可移植性，一个层面是源代码级别的可移植性，另一个层面就是binary的可移植性。</p>
+<p>源代码的可移植性意味着当把源代码迁移到另一个平台之后，不对代码做任何的修改就可以正常编译通过运行；binary的可移植性意味着直接讲可执行文件迁移到另一个平台就可以正常运行。</p>
+<p>因此为了保证源码级别的可移植性，所以有了API的标准；为了保证binary的可移植性，所以有ABI的标准。</p>
+<p>POSIX属于API的标准。POSIX全称<strong>Portable Operating System Interface</strong>，可移植操作系统接口。POSIX是Unix的一个标准。由于早起Unix开放源码，所以衍生出了许多Unix的版本。但是这些Unix版本之间互不兼容，应用无法移植。</p>
+<p><img src="/./assets/2560px-Unix_history-simple.svg.png" alt="undefined"></p>
+<p>所以为了提高可移植性(<strong>这里可可移植性是源码级别的可移植性还是binary的可移植性？应该是源码级别的可移植性</strong>)，提出了POSIX标准。关于更多POSIX提出的历史背景，可以去看看Unix的历史。</p>
+<p>不同的操作系统对于POSIX标准的支持程度是不一样的。POSIX最初是为Unix制定的，因此Unix-like系统对于POSIX的支持都比较好。</p>
+<p>参考Wikipedia对于POSIX支持程度的分类：</p>
+<ol>
+<li><strong>POSIX-certified</strong></li>
+<li><strong>Formerly POSIX-certified</strong></li>
+<li><strong>Mostly POSIX-compliant</strong></li>
+</ol>
+<p>而Windows不在上面的任何一类中。Windows下的API并没有像POSIX一样的统一的标准，而是由多个不同的API构成，统称为Windows API(WinAPI)</p>
+<img src="./assets/image-20241123013508116.png" alt="image-20241123013508116" style="zoom:50%;" />
+
+
+
+
+
+<h2 id="在了解了API-ABI之后，API-ABI是谁来实现的？操作系统是如何支持POSIX标准的？"><a href="#在了解了API-ABI之后，API-ABI是谁来实现的？操作系统是如何支持POSIX标准的？" class="headerlink" title="在了解了API&#x2F;ABI之后，API&#x2F;ABI是谁来实现的？操作系统是如何支持POSIX标准的？"></a>在了解了API&#x2F;ABI之后，API&#x2F;ABI是谁来实现的？操作系统是如何支持POSIX标准的？</h2><p>先来看API的实现。我们先来看Unix-like系列的API的实现，重点关注Linux。</p>
+<p>Linux提供的API包括两个部分，一个部分是C标准库提供的函数，另一个部分是Linux内核提供的系统调用。Linux API不仅实现了POSIX标准，同时也在POSIX标准之外额外的特性。所以可以说POSIX API是Linux API的一个子集。</p>
+<img src="./assets/2560px-Linux_kernel_System_Call_Interface_and_glibc.svg.png" alt="undefined" style="zoom: 25%;" />
+
+<p>刚才提到过，Linux API由两部分组成，一部分是C标准库，另一部分是系统调用。先来看C标准库。</p>
+<p>既然是C标准库，那就离不开C标准。C标准与POSIX标准是一个并列的关系，二者之间存在区别<a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/9376837/difference-between-c-standard-library-and-c-posix-library">Difference between C standard library and C POSIX library</a>。</p>
+<p>整个C标准的大致发展历程如下</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">flowchart LR</span><br><span class="line">	id1[K&amp;R C]</span><br><span class="line">	id2[ASIC C/C89]</span><br><span class="line">	id3[ISO C/C90]</span><br><span class="line">	id8[C95]</span><br><span class="line">	id4[C99]</span><br><span class="line">	id5[C11]</span><br><span class="line">	id6[C17/C18]</span><br><span class="line">	id7[C2X]</span><br><span class="line">	</span><br><span class="line">	id1 --&gt; id2 --&gt; id3 --&gt; id8 --&gt; id4 --&gt; id5 --&gt; id6 --&gt; id7</span><br><span class="line">	</span><br></pre></td></tr></table></figure>
+
+<p>ISO C&#x2F;ASIC C&#x2F;C89&#x2F;C90这4个标准是一样的。</p>
+<p>在ASIC C标准中，定义了C标准库(C Standard Library)。</p>
+<p>C标准定义的C标准库如下</p>
+<blockquote>
+<table>
+<thead>
+<tr>
+<th align="center">Name</th>
+<th align="center">From</th>
+<th align="center">Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center"><code>&lt;assert.h&gt;</code></td>
+<td align="center"></td>
+<td align="center">Declares the <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Assertion_(computing)">assert</a> macro, used to assist with detecting logical errors and other types of bugs while <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Debugging">debugging</a> a program.</td>
+</tr>
+<tr>
+<td align="center"><code>&lt;complex.h&gt;</code></td>
+<td align="center">C99</td>
+<td align="center">Defines a <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_mathematical_functions#complex.h">set of functions</a> for manipulating <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Complex_number">complex numbers</a>.</td>
+</tr>
+<tr>
+<td align="center"><code>&lt;ctype.h&gt;</code></td>
+<td align="center"></td>
+<td align="center">Defines <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_character_classification">set of functions</a> used to classify characters by their types or to convert between upper and lower case in a way that is independent of the used <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Character_set">character set</a> (typically <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/ASCII">ASCII</a> or one of its extensions, although implementations utilizing <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/EBCDIC">EBCDIC</a> are also known).</td>
+</tr>
+<tr>
+<td align="center"><code>&lt;errno.h&gt;</code></td>
+<td align="center"></td>
+<td align="center">For testing error codes reported by library functions.</td>
+</tr>
+<tr>
+<td align="center"><code>&lt;fenv.h&gt;</code></td>
+<td align="center">C99</td>
+<td align="center">Defines a <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_mathematical_functions#fenv.h">set of functions</a> for controlling <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Floating-point">floating-point</a> environment.</td>
+</tr>
+<tr>
+<td align="center"><code>&lt;float.h&gt;</code></td>
+<td align="center"></td>
+<td align="center">Defines <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_data_types#float.h">macro constants</a> specifying the implementation-specific properties of the <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Floating-point">floating-point</a> library.</td>
+</tr>
+<tr>
+<td align="center"><code>&lt;inttypes.h&gt;</code></td>
+<td align="center">C99</td>
+<td align="center">Defines <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_data_types#inttypes.h">exact-width integer types</a>.</td>
+</tr>
+<tr>
+<td align="center"><code>&lt;iso646.h&gt;</code></td>
+<td align="center">NA1</td>
+<td align="center">Defines <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_alternative_tokens">several macros</a> that implement alternative ways to express several standard tokens. For programming in <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/ISO_646">ISO 646</a> variant character sets.</td>
+</tr>
+<tr>
+<td align="center"><code>&lt;limits.h&gt;</code></td>
+<td align="center"></td>
+<td align="center">Defines <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_data_types#limits.h">macro constants</a> specifying the implementation-specific properties of the integer types.</td>
+</tr>
+<tr>
+<td align="center"><code>&lt;locale.h&gt;</code></td>
+<td align="center"></td>
+<td align="center">Defines <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_localization_functions">localization functions</a>.</td>
+</tr>
+<tr>
+<td align="center"><code>&lt;math.h&gt;</code></td>
+<td align="center"></td>
+<td align="center">Defines <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_mathematical_functions">common mathematical functions</a>.</td>
+</tr>
+<tr>
+<td align="center"><code>&lt;setjmp.h&gt;</code></td>
+<td align="center"></td>
+<td align="center">Declares the macros <code>setjmp</code> and <code>longjmp</code>, which are used for non-local exits.</td>
+</tr>
+<tr>
+<td align="center"><code>&lt;signal.h&gt;</code></td>
+<td align="center"></td>
+<td align="center">Defines <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_signal_handling">signal-handling functions</a>.</td>
+</tr>
+<tr>
+<td align="center"><code>&lt;stdalign.h&gt;</code></td>
+<td align="center">C11</td>
+<td align="center">For querying and specifying the <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Data_structure_alignment">alignment</a> of objects.</td>
+</tr>
+<tr>
+<td align="center"><code>&lt;stdarg.h&gt;</code></td>
+<td align="center"></td>
+<td align="center">For accessing a varying number of arguments passed to functions.</td>
+</tr>
+<tr>
+<td align="center"><code>&lt;stdatomic.h&gt;</code></td>
+<td align="center">C11</td>
+<td align="center">For <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Linearizability">atomic operations</a> on data shared between threads.</td>
+</tr>
+<tr>
+<td align="center"><code>&lt;stdbool.h&gt;</code></td>
+<td align="center">C99</td>
+<td align="center">Defines <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_data_types#stdbool.h">a Boolean data type</a>.</td>
+</tr>
+<tr>
+<td align="center"><code>&lt;stddef.h&gt;</code></td>
+<td align="center"></td>
+<td align="center">Defines <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_data_types#stddef.h">several useful types and macros</a>.</td>
+</tr>
+<tr>
+<td align="center"><code>&lt;stdint.h&gt;</code></td>
+<td align="center">C99</td>
+<td align="center">Defines <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_data_types#stdint.h">exact-width integer types</a>.</td>
+</tr>
+<tr>
+<td align="center"><code>&lt;stdio.h&gt;</code></td>
+<td align="center"></td>
+<td align="center">Defines <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_file_input/output">core input and output functions</a></td>
+</tr>
+<tr>
+<td align="center"><code>&lt;stdlib.h&gt;</code></td>
+<td align="center"></td>
+<td align="center">Defines <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_string_handling#stdlib.h">numeric conversion functions</a>, <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_mathematical_functions#stdlib.h">pseudo-random numbers generation functions</a>, <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_dynamic_memory_allocation">memory allocation</a>, <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_process_control">process control functions</a></td>
+</tr>
+<tr>
+<td align="center"><code>&lt;stdnoreturn.h&gt;</code></td>
+<td align="center">C11</td>
+<td align="center">For specifying non-returning functions</td>
+</tr>
+<tr>
+<td align="center"><code>&lt;string.h&gt;</code></td>
+<td align="center"></td>
+<td align="center">Defines <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_string_handling">string-handling functions</a></td>
+</tr>
+<tr>
+<td align="center"><code>&lt;tgmath.h&gt;</code></td>
+<td align="center">C99</td>
+<td align="center">Defines <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_mathematical_functions#tgmath.h">type-generic mathematical functions</a>.</td>
+</tr>
+<tr>
+<td align="center"><code>&lt;threads.h&gt;</code></td>
+<td align="center">C11</td>
+<td align="center">Defines functions for managing multiple <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Thread_(computer_science)">threads</a>, <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Mutual_exclusion">mutexes</a> and <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Monitor_(synchronization)">condition variables</a></td>
+</tr>
+<tr>
+<td align="center"><code>&lt;time.h&gt;</code></td>
+<td align="center"></td>
+<td align="center">Defines <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_date_and_time_functions">date- and time-handling functions</a></td>
+</tr>
+<tr>
+<td align="center"><code>&lt;uchar.h&gt;</code></td>
+<td align="center">C11</td>
+<td align="center">Types and functions for manipulating <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Unicode">Unicode</a> characters</td>
+</tr>
+<tr>
+<td align="center"><code>&lt;wchar.h&gt;</code></td>
+<td align="center">NA1</td>
+<td align="center">Defines <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_string_handling">wide-string-handling functions</a></td>
+</tr>
+<tr>
+<td align="center"><code>&lt;wctype.h&gt;</code></td>
+<td align="center">NA1</td>
+<td align="center">Defines <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_character_classification">set of functions</a> used to classify wide characters by their types or to convert between upper and lower case</td>
+</tr>
+</tbody></table>
+</blockquote>
+<p>POSIX标准并没有规定实现POSIX标准的语言。因此基于ASIC C标准定义的的C标准库，就开发出了C POSIX library。下面是C POSIX library定义的API，我们可以将其与C标准库进行一些比较，可以发现C POSIX library与C Standard library之间存在很大的交集，但是各自也有各自的独享的API。</p>
+<p>一个非常好的例子就是线程库，POSIX下的线程库遵循的是POSIX标准，API定义在<code>pthread.h</code>中；而C标准在C11中引入了<code>threads.h</code>，提供了对线程相关的支持。除了线程之外，Sockets、file descriptors、shared memory等都是在POSIX中规定的；而C标准中并没有规定。</p>
+<blockquote>
+<table>
+<thead>
+<tr>
+<th align="center">Header file</th>
+<th align="center">Description</th>
+<th align="center">First released</th>
+<th align="center">C Standard</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center"><strong><code>&lt;aio.h&gt;</code></strong></td>
+<td align="center"><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Asynchronous_I/O">Asynchronous input and output</a></td>
+<td align="center">Issue 5</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;arpa/inet.h&gt;</code></strong></td>
+<td align="center">Functions for manipulating numeric <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/IP_addresses">IP addresses</a> (part of <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Berkeley_sockets">Berkeley sockets</a>)</td>
+<td align="center">Issue 6</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;assert.h&gt;</code></strong></td>
+<td align="center">Verify assumptions</td>
+<td align="center">Issue 1</td>
+<td align="center">ANSI (89)</td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;complex.h&gt;</code></strong></td>
+<td align="center">Complex Arithmetic, see <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_mathematical_functions">C mathematical functions</a></td>
+<td align="center">Issue 6</td>
+<td align="center">C99</td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;cpio.h&gt;</code></strong></td>
+<td align="center"><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/File_format#Magic_number">Magic numbers</a> for the <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Cpio">cpio</a> archive format</td>
+<td align="center">Issue 3</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;ctype.h&gt;</code></strong></td>
+<td align="center">Character types</td>
+<td align="center">Issue 1</td>
+<td align="center">ANSI (89)</td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;dirent.h&gt;</code></strong></td>
+<td align="center">Allows the opening and listing of <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Directory_(file_systems)">directories</a></td>
+<td align="center">Issue 2</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;dlfcn.h&gt;</code></strong></td>
+<td align="center"><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Dynamic_linker">Dynamic linking</a></td>
+<td align="center">Issue 5</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;errno.h&gt;</code></strong></td>
+<td align="center">Retrieving Error Number</td>
+<td align="center">Issue 1</td>
+<td align="center">ANSI (89)</td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;fcntl.h&gt;</code></strong></td>
+<td align="center">File opening, <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/File_locking">locking</a> and other operations</td>
+<td align="center">Issue 1</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;fenv.h&gt;</code></strong></td>
+<td align="center">Floating-Point Environment (FPE), see <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_mathematical_functions">C mathematical functions</a></td>
+<td align="center">Issue 6</td>
+<td align="center">C99</td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;float.h&gt;</code></strong></td>
+<td align="center">Floating-point types, see <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_data_types">C data types</a></td>
+<td align="center">Issue 4</td>
+<td align="center">ANSI (89)</td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;fmtmsg.h&gt;</code></strong></td>
+<td align="center">Message display structures</td>
+<td align="center">Issue 4</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;fnmatch.h&gt;</code></strong></td>
+<td align="center">Filename matching</td>
+<td align="center">Issue 4</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;ftw.h&gt;</code></strong></td>
+<td align="center">File tree traversal</td>
+<td align="center">Issue 1</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;glob.h&gt;</code></strong></td>
+<td align="center">Pathname <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Glob_(programming)">“globbing”</a> (pattern-matching)</td>
+<td align="center">Issue 4</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;grp.h&gt;</code></strong></td>
+<td align="center">User <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Group_identifier_(Unix)">group</a> information and control</td>
+<td align="center">Issue 1</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;iconv.h&gt;</code></strong></td>
+<td align="center"><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Character_encoding">Codeset</a> conversion facility</td>
+<td align="center">Issue 4</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;inttypes.h&gt;</code></strong></td>
+<td align="center">Fixed sized integer types, see <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_data_types">C data types</a></td>
+<td align="center">Issue 5</td>
+<td align="center">C99</td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;iso646.h&gt;</code></strong></td>
+<td align="center">Alternative spellings, see <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_alternative_tokens">C alternative tokens</a></td>
+<td align="center">Issue 5</td>
+<td align="center">NA1 (95)</td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;langinfo.h&gt;</code></strong></td>
+<td align="center">Language information constants – builds on <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_localization_functions">C localization functions</a></td>
+<td align="center">Issue 2</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;libgen.h&gt;</code></strong></td>
+<td align="center">Pathname manipulation</td>
+<td align="center">Issue 4</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;limits.h&gt;</code></strong></td>
+<td align="center">Implementation-defined constants, see <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_data_types">C data types</a></td>
+<td align="center">Issue 1</td>
+<td align="center">ANSI (89)</td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;locale.h&gt;</code></strong></td>
+<td align="center">Category macros, see <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_localization_functions">C localization functions</a></td>
+<td align="center">Issue 3</td>
+<td align="center">ANSI (89)</td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;math.h&gt;</code></strong></td>
+<td align="center">Mathematical declarations, see <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_mathematical_functions">C mathematical functions</a></td>
+<td align="center">Issue 1</td>
+<td align="center">ANSI (89)</td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;monetary.h&gt;</code></strong></td>
+<td align="center">String formatting of monetary units</td>
+<td align="center">Issue 4</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;mqueue.h&gt;</code></strong></td>
+<td align="center"><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Message_queue">Message queue</a></td>
+<td align="center">Issue 5</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;ndbm.h&gt;</code></strong></td>
+<td align="center"><a target="_blank" rel="noopener" href="https://en.wikipedia.org/w/index.php?title=NDBM&action=edit&redlink=1">NDBM</a> database operations</td>
+<td align="center">Issue 4</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;net/if.h&gt;</code></strong></td>
+<td align="center">Listing of local network interfaces</td>
+<td align="center">Issue 6</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;netdb.h&gt;</code></strong></td>
+<td align="center">Translating protocol and host names into numeric addresses (part of <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Berkeley_sockets">Berkeley sockets</a>)</td>
+<td align="center">Issue 6</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;netinet/in.h&gt;</code></strong></td>
+<td align="center">Defines Internet protocol and address family (part of <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Berkeley_sockets">Berkeley sockets</a>)</td>
+<td align="center">Issue 6</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;netinet/tcp.h&gt;</code></strong></td>
+<td align="center">Additional <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Transmission_Control_Protocol">TCP</a> control options (part of <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Berkeley_sockets">Berkeley sockets</a>)</td>
+<td align="center">Issue 6</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;nl_types.h&gt;</code></strong></td>
+<td align="center">Localization message catalog functions</td>
+<td align="center">Issue 2</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;poll.h&gt;</code></strong></td>
+<td align="center"><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Asynchronous_I/O">Asynchronous file descriptor multiplexing</a></td>
+<td align="center">Issue 4</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;pthread.h&gt;</code></strong></td>
+<td align="center">Defines an API for creating and manipulating <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/POSIX_threads">POSIX threads</a></td>
+<td align="center">Issue 5</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;pwd.h&gt;</code></strong></td>
+<td align="center"><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Passwd_(file)">passwd</a> (user information) access and control</td>
+<td align="center">Issue 1</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;regex.h&gt;</code></strong></td>
+<td align="center"><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Regular_expression">Regular expression</a> matching</td>
+<td align="center">Issue 4</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;sched.h&gt;</code></strong></td>
+<td align="center">Execution scheduling</td>
+<td align="center">Issue 5</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;search.h&gt;</code></strong></td>
+<td align="center">Search tables</td>
+<td align="center">Issue 1</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;semaphore.h&gt;</code></strong></td>
+<td align="center">POSIX <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Semaphore_(programming)">semaphores</a></td>
+<td align="center">Issue 5</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;setjmp.h&gt;</code></strong></td>
+<td align="center">Stack environment declarations</td>
+<td align="center">Issue 1</td>
+<td align="center">ANSI (89)</td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;signal.h&gt;</code></strong></td>
+<td align="center">Signals, see <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_signal_handling">C signal handling</a></td>
+<td align="center">Issue 1</td>
+<td align="center">ANSI (89)</td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;spawn.h&gt;</code></strong></td>
+<td align="center">Process <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Spawn_(computing)">spawning</a></td>
+<td align="center">Issue 6</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;stdarg.h&gt;</code></strong></td>
+<td align="center">Handle Variable Argument List</td>
+<td align="center">Issue 4</td>
+<td align="center">ANSI (89)</td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;stdbool.h&gt;</code></strong></td>
+<td align="center">Boolean type and values, see <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_data_types">C data types</a></td>
+<td align="center">Issue 6</td>
+<td align="center">C99</td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;stddef.h&gt;</code></strong></td>
+<td align="center">Standard type definitions, see <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_data_types">C data types</a></td>
+<td align="center">Issue 4</td>
+<td align="center">ANSI (89)</td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;stdint.h&gt;</code></strong></td>
+<td align="center">Integer types, see <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_data_types">C data types</a></td>
+<td align="center">Issue 6</td>
+<td align="center">C99</td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;stdio.h&gt;</code></strong></td>
+<td align="center">Standard buffered input&#x2F;output, see <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_file_input/output">C file input&#x2F;output</a></td>
+<td align="center">Issue 1</td>
+<td align="center">ANSI (89)</td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;stdlib.h&gt;</code></strong></td>
+<td align="center">Standard library definitions, see <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_standard_library">C standard library</a></td>
+<td align="center">Issue 3</td>
+<td align="center">ANSI (89)</td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;string.h&gt;</code></strong></td>
+<td align="center">Several String Operations, see <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_string_handling">C string handling</a></td>
+<td align="center">Issue 1</td>
+<td align="center">ANSI (89)</td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;strings.h&gt;</code></strong></td>
+<td align="center">Case-insensitive string comparisons</td>
+<td align="center">Issue 4</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;stropts.h&gt;</code></strong></td>
+<td align="center">Stream manipulation, including <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Ioctl">ioctl</a></td>
+<td align="center">Issue 4</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;sys/ipc.h&gt;</code></strong></td>
+<td align="center"><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Inter-process_communication">Inter-process communication</a> (IPC)</td>
+<td align="center">Issue 2</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;sys/mman.h&gt;</code></strong></td>
+<td align="center">Memory management, including POSIX <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Shared_memory_(interprocess_communication)">shared memory</a> and <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Memory_mapped_files">memory mapped files</a></td>
+<td align="center">Issue 4</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;sys/msg.h&gt;</code></strong></td>
+<td align="center">POSIX <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Message_queue">message queues</a></td>
+<td align="center">Issue 2</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;sys/resource.h&gt;</code></strong></td>
+<td align="center">Resource usage, priorities, and limiting</td>
+<td align="center">Issue 4</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;sys/select.h&gt;</code></strong></td>
+<td align="center"><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Select_(Unix)">Synchronous I&#x2F;O multiplexing</a></td>
+<td align="center">Issue 6</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;sys/sem.h&gt;</code></strong></td>
+<td align="center">XSI (<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Unix_System_V">SysV</a> style) <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Semaphore_(programming)">semaphores</a></td>
+<td align="center">Issue 2</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;sys/shm.h&gt;</code></strong></td>
+<td align="center">XSI (<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Unix_System_V">SysV</a> style) <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Shared_memory_(interprocess_communication)">shared memory</a></td>
+<td align="center">Issue 2</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;sys/socket.h&gt;</code></strong></td>
+<td align="center">Main <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Berkeley_sockets">Berkeley sockets</a> header</td>
+<td align="center">Issue 6</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;sys/stat.h&gt;</code></strong></td>
+<td align="center">File information (<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Stat_(Unix)">stat</a> et al.)</td>
+<td align="center">Issue 1</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;sys/statvfs.h&gt;</code></strong></td>
+<td align="center">File System information</td>
+<td align="center">Issue 4</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;sys/time.h&gt;</code></strong></td>
+<td align="center">Time and date functions and structures</td>
+<td align="center">Issue 4</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;sys/times.h&gt;</code></strong></td>
+<td align="center">File access and modification times</td>
+<td align="center">Issue 1</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;sys/types.h&gt;</code></strong></td>
+<td align="center">Various data types used elsewhere</td>
+<td align="center">Issue 1</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;sys/uio.h&gt;</code></strong></td>
+<td align="center"><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Vectored_I/O">Vectored I&#x2F;O</a> operations</td>
+<td align="center">Issue 4</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;sys/un.h&gt;</code></strong></td>
+<td align="center"><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Unix_domain_socket">Unix domain sockets</a></td>
+<td align="center">Issue 6</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;sys/utsname.h&gt;</code></strong></td>
+<td align="center">Operating system information, including <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Uname">uname</a></td>
+<td align="center">Issue 1</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;sys/wait.h&gt;</code></strong></td>
+<td align="center">Status of terminated child processes (see <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Wait_(operating_system)">wait</a>)</td>
+<td align="center">Issue 3</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;syslog.h&gt;</code></strong></td>
+<td align="center"><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Syslog">System error logging</a></td>
+<td align="center">Issue 4</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;tar.h&gt;</code></strong></td>
+<td align="center"><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/File_format#Magic_number">Magic numbers</a> for the <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Tar_(file_format)">tar</a> archive format</td>
+<td align="center">Issue 3</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;termios.h&gt;</code></strong></td>
+<td align="center">Allows <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Serial_port">terminal I&#x2F;O</a> interfaces</td>
+<td align="center">Issue 3</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;tgmath.h&gt;</code></strong></td>
+<td align="center">Type-Generic Macros, see <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_mathematical_functions">C mathematical functions</a></td>
+<td align="center">Issue 6</td>
+<td align="center">C99</td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;time.h&gt;</code></strong></td>
+<td align="center">Type-Generic Macros, see <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_date_and_time_functions">C date and time functions</a></td>
+<td align="center">Issue 1</td>
+<td align="center">ANSI (89)</td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;trace.h&gt;</code></strong></td>
+<td align="center">Tracing of runtime behavior (DEPRECATED)</td>
+<td align="center">Issue 6</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;ulimit.h&gt;</code></strong></td>
+<td align="center">Resource limiting (DEPRECATED in favor of &lt;sys&#x2F;resource.h&gt;)</td>
+<td align="center">Issue 1</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;unistd.h&gt;</code></strong></td>
+<td align="center">Various essential POSIX functions and constants</td>
+<td align="center">Issue 1</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;utime.h&gt;</code></strong></td>
+<td align="center"><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Inode">inode</a> access and modification times</td>
+<td align="center">Issue 3</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;utmpx.h&gt;</code></strong></td>
+<td align="center">User accounting database functions</td>
+<td align="center">Issue 4</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;wchar.h&gt;</code></strong></td>
+<td align="center">Wide-Character Handling, see <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_string_handling">C string handling</a></td>
+<td align="center">Issue 4</td>
+<td align="center">NA1 (95)</td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;wctype.h&gt;</code></strong></td>
+<td align="center">Wide-Character Classification and Mapping Utilities, see <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C_character_classification">C character classification</a></td>
+<td align="center">Issue 5</td>
+<td align="center">NA1 (95)</td>
+</tr>
+<tr>
+<td align="center"><strong><code>&lt;wordexp.h&gt;</code></strong></td>
+<td align="center">Word-expansion like the <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Unix_shell">shell</a> would perform</td>
+<td align="center">Issue 4</td>
+<td align="center"></td>
+</tr>
+</tbody></table>
+</blockquote>
+<p>如果我们进一步剖析C标准库，POSIX标准库以及Unix-like系统之间的关系：</p>
+<blockquote>
+<p><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Unix-like">Unix-like</a> systems typically have a C library in <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Shared_library">shared library</a> form, but the header files (and compiler toolchain) may be absent from an installation so C development may not be possible. The C library is considered part of the operating system on Unix-like systems; in addition to functions specified by the C standard, it includes other functions that are part of the operating system API, such as functions specified in the <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/POSIX">POSIX</a> standard. The C library functions, including the ISO C standard ones, are widely used by programs, and are regarded as if they were not only an implementation of something in the C language, but also <em>de facto</em> part of the operating system interface. Unix-like operating systems generally cannot function if the C library is erased. This is true for applications which are dynamically as opposed to statically linked. Further, the kernel itself (at least in the case of Linux) operates independently of any libraries.</p>
+</blockquote>
+<p>这背后所折射出的情况是，C&#x2F;C++与操作系统(或者更具体地来说，Unix-like系统)是绑定的。C标准所规定的C标准库，实际上同时也是操作系统对外提供的API。本质上来说，POSIX是一个系统级别的标准，而C标准是一个语言级别的标准。但是由于Unix-like系统是由C编写的，并且POSIX是Unix的一个标准，导致C标准与POSIX标准之间有许多交叉，这交叉的部分就是C标准库。</p>
+<p>虽然说POSIX标准只是一个接口的标准，并没有规定实现，但是C语言几乎是POSIX实现的事实标准。还是之前的原因，Unix是C编写的，使得POSIX标准在设计的时候会参考C标准：如果我们去看POSIX标准中的内容，会发现POSIX标准中也规定了一个C标准库。</p>
+<p><a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/9376837/difference-between-c-standard-library-and-c-posix-library">Difference between C standard library and C POSIX library</a>这篇文章中也提到了：</p>
+<blockquote>
+<p>POSIX标准库相当于C标准库的一个superset，并且POSIX标准库是遵循C标准库的。如果POSIX标准与C标准发生了冲突，C标准的优先级更高。</p>
+</blockquote>
+<p>但是这只适用于早期的C标准定义的C标准库。随着C标准的不断发展，C标准库中也出现了不在POSIX标准中的特性(注意区分标准与标准库，POSIX标准是C标准的超集，不代表POSIX标准是C标准的超集)。</p>
+<p>如果让我们用一张图来总结上面这些错综复杂的关系</p>
+<p>我们回到Linux API上。之前我们提到过Linux API包含两个部分，C标准库以及系统调用。Linux采用的C标准库是glibc(<strong>GNU C Library</strong>)。</p>
+<blockquote>
+<p>glibc is <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Free_software">free software</a> released under the <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/GNU_Lesser_General_Public_License">GNU Lesser General Public License</a>.[<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Glibc#cite_note-licensing-3">3]</a> The GNU C Library project provides the core libraries for the GNU system, as well as many systems that use <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Linux_kernel">Linux</a> as the <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Kernel_(operating_system)">kernel</a>. These libraries provide critical <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/API">APIs</a> including <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/ISO">ISO</a> <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/C11_(C_standard_revision)">C11</a>, <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/POSIX.1-2008">POSIX.1-2008</a>, <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Berkeley_Software_Distribution">BSD</a>, OS-specific APIs and more.</p>
+</blockquote>
+<p>虽然说glibc是GNU对于C标准库的实现，但是glibc这个标准库不仅仅实现了ISO C11的标准，还同时实现了POSIX标准，同时还支持C++。</p>
+<p>C标准库实际上也是对系统调用的封装。有许多的C标准库实现：</p>
+<ol>
+<li>BSD libc</li>
+<li><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Glibc">glibc</a></li>
+<li><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/UClibc">uClibc</a></li>
+<li><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Klibc">klibc</a></li>
+<li><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Newlib">Newlib</a></li>
+<li><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Musl">musl</a></li>
+<li><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Dietlibc">dietlibc</a></li>
+<li><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Bionic_(software)">libbionic</a> and <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Hybris_(software)">libhybris</a></li>
+</ol>
+<img src="./assets/image-20241123160108053.png" alt="image-20241123160108053" style="zoom:50%;" />
+
+
+
+<p>再来看ABI的实现。对于ABI的讨论会进一步涉及到底层的硬件层面。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2024/11/19/hello-world/" rel="next" title="Hello World">
+                <i class="fa fa-chevron-left"></i> Hello World
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2024/11/19/3D/" rel="prev" title="">
+                 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name"></p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/%20%7C%7C%20archive">
+              
+                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#C%E7%BC%96%E8%AF%91%E4%BD%93%E7%B3%BB"><span class="nav-number">1.</span> <span class="nav-text">C编译体系</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#1-Reference"><span class="nav-number">2.</span> <span class="nav-text">1. Reference</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-C-C-%E7%9A%84%E5%8C%85%E7%AE%A1%E7%90%86"><span class="nav-number">3.</span> <span class="nav-text">2. C&#x2F;C++的包管理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-Linux%E8%87%AA%E5%B8%A6%E7%9A%84%E4%BA%8C%E8%BF%9B%E5%88%B6%E5%8C%85%E7%AE%A1%E7%90%86%E5%B7%A5%E5%85%B7"><span class="nav-number">3.1.</span> <span class="nav-text">2.1 Linux自带的二进制包管理工具</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-%E5%88%A9%E7%94%A8CMake%E7%AD%89%E6%89%8B%E5%8A%A8%E5%BC%95%E7%94%A8"><span class="nav-number">3.2.</span> <span class="nav-text">2.2 利用CMake等手动引用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-3-%E4%BB%A3%E7%A0%81%E5%BA%93%E5%86%85%E5%B8%A6%E4%BA%8C%E8%BF%9B%E5%88%B6%E4%BE%9D%E8%B5%96"><span class="nav-number">3.3.</span> <span class="nav-text">2.3 代码库内带二进制依赖</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-4-%E5%88%86%E5%B8%83%E5%BC%8F%E6%BA%90%E7%A0%81%E7%AE%A1%E7%90%86-%E9%9B%86%E4%B8%AD%E5%BC%8F%E4%BE%9D%E8%B5%96%E7%AE%A1%E7%90%86"><span class="nav-number">3.4.</span> <span class="nav-text">2.4 分布式源码管理+集中式依赖管理</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-C-C-ABI"><span class="nav-number">4.</span> <span class="nav-text">3. C&#x2F;C++ ABI</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Windows%E4%B8%8B%E7%9A%84C-C-%E7%BC%96%E8%AF%91%E4%BD%93%E7%B3%BB"><span class="nav-number">5.</span> <span class="nav-text">. Windows下的C&#x2F;C++编译体系</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-API-ABI"><span class="nav-number">5.1.</span> <span class="nav-text">.1 API&#x2F;ABI</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9C%A8%E4%BA%86%E8%A7%A3%E4%BA%86API-ABI%E4%B9%8B%E5%90%8E%EF%BC%8CAPI-ABI%E6%98%AF%E8%B0%81%E6%9D%A5%E5%AE%9E%E7%8E%B0%E7%9A%84%EF%BC%9F%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%98%AF%E5%A6%82%E4%BD%95%E6%94%AF%E6%8C%81POSIX%E6%A0%87%E5%87%86%E7%9A%84%EF%BC%9F"><span class="nav-number">5.2.</span> <span class="nav-text">在了解了API&#x2F;ABI之后，API&#x2F;ABI是谁来实现的？操作系统是如何支持POSIX标准的？</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">KangjieZhang</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Muse</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
